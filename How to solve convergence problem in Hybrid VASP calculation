@@ -2,5 +2,5 @@ Some possible solutions, try one by one until it is convergent
 
 1. Prepare a PBE WAVECAR for starting a Hybrid calculation (same POSCAR) in VASP
 2. Try different algo, algo='N', algo='All' and  algo='damped'
-3. adjust AMIX from 1 to 0 gradually until the calculation is convergent
-4. set IMIX=1 and then adjust AMIX from 1 to 0 gradually until the calculation is convergent
+3. adjust AMIX from 1 to 0 (does not include 1 and 0) gradually until the calculation is convergent 
+4. set IMIX=1 and then adjust AMIX from 1 to 0 (does not include 1 and 0) gradually until the calculation is convergent
