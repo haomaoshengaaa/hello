@@ -1,0 +1,13 @@
+from pymatgen.io.vasp.outputs import Eigenval
+from pymatgen.electronic_structure.core import Spin
+
+eigenval = Eigenval("pbe_calculation/EIGENVAL")
+
+
+eigenvalues_up = eigenval.eigenvalues[Spin.up]
+# print the eigenvalue and its orbtial occupation number for the first kpoint and the third band, because the shape of eigenvalues_up is (nkpt, nbands, 2)
+print(eigenvalues_up[0,2,:]) 
+
+num_spin = len(list(eigenval.eigenvalues.keys()))
+if num_spin == 2:
+    eigenvalues_down = eigenval.eigenvalues[Spin.down]
