@@ -1,0 +1,7 @@
+from pymatgen.io.vasp import Procar
+from pymatgen.electronic_structure.core import Spin
+
+procar = Procar("PROCAR.SCF")
+pro_scf = procar.data[Spin.up]
+
+# the dimension of pro_scf is (k-point index, band index, ion index, orbital index)
