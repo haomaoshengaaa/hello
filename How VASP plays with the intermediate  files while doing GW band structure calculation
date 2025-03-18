@@ -1,0 +1,19 @@
+To produce a GW band structure (take GW0 method as example) you need to do this with VASP:
+
+1. self consistent calculation then you have WAVECAR.SCF
+
+2. load WAVECAR.SCF and perform exact hamiltonian diagonalization in VASP to obtain the virtual orbitals. Then you have WAVECAR.VIR which includes the information of occupied and virtual orbitals.
+
+3. load WAVECAR.VIR and do GW calculation. Here I set ALGO=GW0 so the orbitals will not be updated during the calculation. Only the eigenvalues will be adjusted.
+   Here you should know, any WAVECAR stores information not only about the wavefunction but also about the eigenvalues.
+   So if you carefully compare WAVECAR.VIR and WAVECAR.GW, you will find the same wavefunction but different eigenvalues for some orbitals.
+
+4. load WAVECAR.GW and generate wannier90 input files, including 
+  wannier90.eig   wannier90.mmn  wannier90.win  wannier90.amn
+
+  The file wannier90.eig stores eigenvalues in GW calculation
+
+  The file wannier90.mmn and wannier90.amn stores the wavefunction overlap matrix and wavefunction projection matrix. 
+  These two files are only dependent on wavefunction stored in WAVECAR and it has nothing to do with the eigenvalues stored in WAVECAR.
+  So let us imagine you load WAVECAR.VIR or WAVECAR.GW to generate wannier90 input files, you will find exactly the same wannier90.mmn and wannier90.amn but different wannier90.eig for these two WAVECAR files.
+
