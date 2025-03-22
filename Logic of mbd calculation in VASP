@@ -1,0 +1,92 @@
+Logic of MBD calculation in VASP source code
+Note :this code is only tested for ISYM = -1,IVDW = 263, LSCSGRAD=F, ITIM=1. If you are planning to change these tags, please recheck the code and make sure the code is still compatible.
+
+1. vasp executes function vdw_forces_main()
+2. inside vdw_forces_main(), it executes vdw_forces_MBD()
+3. in vdw_forces_MBD, it first initializes some necessary parameters (for example VDW_SR) that will be used in MBD calculation.
+   Then it calls vdw_tsscs_range_separated_k(), which is designed for MBD calculation in periodic system.
+
+Next I am going to explain the logic of function vdw_tsscs_range_separated_k()
+Two important input parameters are already calculated for unscreened system based on the Hirshfeld partition scheme
+C6 coefficient c6TS[num_atoms]   and   static polarizability alphaTS[num_atoms] 
+
+Now the explanation of the code
+The first part is the short range part (screening part):
+===============short range part starts========================
+
+loop over atoms:
+   calculate characteristic frequency omegaP based on c6TS and alphaTS
+end loop atoms
+
+loop over frequency:
+
+   loop over atoms:
+      frequency-dependent polarizability alpha_omega is calculated
+      vdW radius R_omega is calculated based on alpha_omega
+   end loop atoms
+
+   loop over atom pairs:
+      short-range dipole tensor for each atom pair is calculated and the matrix elements of Amat are filled here 
+   end loop atom pairs
+
+   loop over atoms:
+      Amat is processed again to include the information of frequency-dependent polarizability alpha_omega
+   end loop atoms
+
+   In a loop here over atom pairs and cartesian coordinates, the screened frequency-dependent polarizability FalphaTSscreened is calculated.
+
+end loop frequency
+
+Only the static components of FalphaTSscreened are extracted and are assigned to variable alphaTSscreened, which is screened static polarizability
+
+the vdW radii is then updated to screened version based on the ratio of screened and unscreened static polarizability
+
+Ok now the short range part(screening part) ends, and long range interaction (MBD energy)should be calculated now
+===================long rang part starts (The MBD energy is calculated here) ==========================
+loop over k-points:
+   loop over atom pairs:
+      the long range dipole tensor for each atom pair is calculated and the matrix elements of Tmat_lr are filled here
+   end loop atom pairs
+
+   loop over frequency:
+
+      loop over atoms:
+         for each atom, the corresponding long range polarizability matrix elements Amat_lr are filled based on the screened frequency-dependent polarizability FalphaTSscreened
+      end loop atoms
+
+      the matrix product Amat_lr*Tmat_lr is calculated
+
+      ln(I-Amat_lr*Tmat_lr) is evaluated and added to the sum_energy (which is finally a Integral over kpoints and frequencies when you finish all the loop and you get the total MBD energy)
+
+   end loop frequency
+
+end loop k-points
+
+================= long range part only for fragment starts (The MBD energy for fragment is calculated here,this is the only part  added by me, so if fragment-related calculation goes wrong, just check the code here) ============================
+
+check if this file "MBD_INPUT" exist in current working folder, if yes then continue
+
+loop over k-points:
+   loop over atom pairs in fragment:
+      the long range dipole tensor for each atom pair in the fragment is calculated and the matrix elements of Tmat_lr_frag are filled here
+   end loop atom pairs in fragment
+
+   loop over frequency:
+
+      loop over atoms in fragment:
+         for each atom in fragment, the corresponding long range polarizability matrix elements Amat_lr_frag are filled based on the screened frequency-dependent polarizability FalphaTSscreened
+      end loop atoms in fragment
+
+      the matrix product Amat_lr_frag*Tmat_lr_frag is calculated
+
+      ln(I-Amat_lr_frag*Tmat_lr_frag) is evaluated and added to the sum_energy_frag (which is finally a Integral over kpoints and frequencies when you finish all the loop and you get the total MBD energy for fragment)
+
+   end loop frequency
+
+end loop k-points
+      
+   
+   
+   
+   
+      
