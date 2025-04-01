@@ -4,10 +4,10 @@ from scipy.spatial import Voronoi
 from shapely.geometry import Polygon
 
 # Define real-space lattice vectors for graphene.
-a1 = np.array([2.1390827473, -1.235])
-a2 = np.array([2.1390827473, 1.235])
-#a1 = np.array([2.45	,0.00])
-#a2 = np.array([-1.225,	2.1217622395])
+#a1 = np.array([2.1390827473, -1.235])
+#a2 = np.array([2.1390827473, 1.235])
+a1 = np.array([2.45	,0.00])
+a2 = np.array([-1.225,	2.1217622395])
 
 # Calculate the area of the unit cell.
 area = np.abs(a1[0]*a2[1] - a1[1]*a2[0])
