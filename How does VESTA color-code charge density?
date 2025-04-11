@@ -1,0 +1,8 @@
+For the region enclosed by iso-surface, VESTA will use a color coding scheme of B-G-R for blue-green-red.  The saturation values can be set with 0% being the lowest value in the data (charge density) and 100% the highest.  VESTA assigns one end of the colour scale (blue) to the minimum saturation value and the other (red) to the maximum saturation value.  Values in between appear somewhere on the scale.  Values less than the minimum will also appear a uniform blue; values more than the maximum will appear a uniform red.
+If you tick the 'assign colours recursively' box, the colour scale is repeated to include values outside the minimum and maximum saturation values.  If, say, you set the minimum and maximum saturation values to 0% and 50%, then the scale will look like this:
+1% blue
+25% green
+50% red
+51% blue
+75% green
+100% red
