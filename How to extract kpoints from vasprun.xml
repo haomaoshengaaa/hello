@@ -1,0 +1,21 @@
+from pymatgen.io.vasp import Vasprun
+
+def extract_kpoints_from_vasprun(vasprun_file):
+    """ 
+    Parse the vasprun.xml file to extract the actual k-points used in the calculation.
+    
+    Parameters:
+        vasprun_file (str): Path to the vasprun.xml file.
+    
+    Returns:
+        List of k-point vectors.
+    """
+    # Parse the vasprun.xml file
+    vasprun = Vasprun(vasprun_file)
+    # Get the list of actual kpoints used in the calculation;
+    # they are stored as a list of tuples/lists.
+    kpoints = vasprun.actual_kpoints
+    return kpoints
+
+xmlfile = '../1_scf/vasprun.xml'
+kpts = extract_kpoints_from_vasprun(xmlfile)
