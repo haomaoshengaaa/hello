@@ -18,4 +18,4 @@ def extract_kpoints_from_vasprun(vasprun_file):
     return kpoints
 
 xmlfile = '../1_scf/vasprun.xml'
-kpts = extract_kpoints_from_vasprun(xmlfile)
+kpts = extract_kpoints_from_vasprun(xmlfile) # the extracted kpoints are direct coordinate (i.e. relative to reciprocal basis vectors)
