@@ -137,3 +137,4 @@ def plot_brillouin_zone(a1,
               loc='upper right', fontsize='small')
     plt.show()
     return fig, ax
+
