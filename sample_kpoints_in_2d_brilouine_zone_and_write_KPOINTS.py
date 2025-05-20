@@ -138,7 +138,7 @@ def sample_and_add_kz(kxy_array, kz_num):
 a1 = [2.45, 0.0]
 a2 = [-1.225, 2.1217622395]
 # sample k points in the 2d brilouine zone
-all_pts = sample_bz(a1,a2,grid_size=150,center_rec=(0.0,0.5), radius=0.5)
+all_pts = sample_2d_brillouin_zone(a1,a2,grid_size=150,center_rec=(0.0,0.5), radius=0.5)
 
 kpoints_to_write = sample_and_add_kz(all_pts,10)
 
