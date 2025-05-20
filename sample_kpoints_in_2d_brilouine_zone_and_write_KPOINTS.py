@@ -1,4 +1,4 @@
-def sample_bz(a1, a2, grid_size=100, center_rec=(0.0,0.0), radius=None):
+def sample_2d_brillouin_zone(a1, a2, grid_size=100, center_rec=(0.0,0.0), radius=None):
     """
     Sample a dense grid of reciprocal‐space points inside the 1st Brillouin Zone (BZ)
     for a 2D lattice defined by real‐space vectors a1, a2.
