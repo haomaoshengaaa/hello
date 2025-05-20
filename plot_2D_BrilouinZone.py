@@ -6,7 +6,7 @@ from adjustText import adjust_text
 import os
 import shutil
 
-def plot_brillouin_zone(a1,
+def plot_2d_brillouin_zone(a1,
                          a2,
                          user_points_reciprocal=None,
                          n_range=2,
