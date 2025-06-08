@@ -11,6 +11,8 @@ pswfc = vaspwfc("./WAVECAR")     # load the WAVECAR file in current folder
 
 num_kpts = pswfc._nkpts
 num_bands = pswfc._nbands
+Efermi = pswfc._efermi
+kvecs = pswfc._kvecs
 
 
 
