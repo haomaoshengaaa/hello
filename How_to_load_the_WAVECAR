@@ -14,9 +14,9 @@ num_bands = pswfc._nbands
 Efermi = pswfc._efermi
 kvecs = pswfc._kvecs
 
-# if you want to save the wavefunction in the CHGCAR format
+# if you want to save the pseudo charge density |psi|**2  in the CHGCAR format
 phi = pswfc.get_ps_wfc(ikpt=1, iband=101, ngrid=pswfc_plw._ngrid * 2)
-pswfc.save2vesta(phi, poscar='./POSCAR',prefix='test')
+pswfc.save2vesta(np.abs(phi)**2, poscar='./POSCAR',prefix='test')
 
 # extract the planewave coefficients for the first spin, the second k point (corresponding to the second k point in EIGENVAL file), and the seventh band (also in EIGENVAL file).Note that ispin,ikpt,iband all start  from 1. Let us assume our calculation is non-spin-polarised, in this case, ispin can only be strictly set to 1.  And you can choose any ikpt and iband you want (you could easily know how many k points and bands there are in EIGENVAL file)
 
