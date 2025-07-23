@@ -1,0 +1,37 @@
+import numpy as np
+from pymatgen.io.vasp import Vasprun
+import matplotlib.pyplot as plt
+from pymatgen.electronic_structure.core import Spin
+
+
+
+vasprun_file = r'C:\Users\Maosheng Hao\Desktop\vasprun.xml'
+vasprun = Vasprun(vasprun_file)
+
+# total dos
+tdos = vasprun.tdos # unit states/ev
+tdos_e = tdos.energies-tdos.efermi
+tdos_density = tdos.densities[Spin.up]
+num_e = len(tdos_e)
+
+# pdos
+specified_atom_indices = [16]
+#specified_orbital_indices = [0,1,2,3] # 0:s 1:py 2:pz 3:px ...
+specified_orbital_indices = list(range(16))
+
+pdos_vals = np.zeros(num_e)
+pdos = vasprun.pdos
+for iatom in range(len(pdos)):
+    if iatom in specified_atom_indices:
+        cur_orb = 0
+        for k,v in pdos[iatom].items():
+            if cur_orb in specified_orbital_indices:
+                pdos_vals += v[Spin.up]
+            cur_orb += 1
+
+# plot
+plt.plot(tdos_e,tdos_density,label='total dos')
+plt.plot(tdos_e,pdos_vals,label='pdos')
+plt.legend()
+plt.show()
+
