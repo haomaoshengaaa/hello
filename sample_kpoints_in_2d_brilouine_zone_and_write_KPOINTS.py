@@ -30,9 +30,9 @@ def sample_2d_brillouin_zone(a1, a2, grid_size=100, center_rec=(0.0,0.0), radius
     # real→reciprocal basis
     a1 = np.array(a1, float)
     a2 = np.array(a2, float)
-    area = abs(a1[0]*a2[1] - a1[1]*a2[0])
-    b1 = 2*np.pi * np.array([-a2[1],  a2[0]]) / area
-    b2 = 2*np.pi * np.array([ a1[1], -a1[0]]) / area
+    D = a1[0]*a2[1] - a1[1]*a2[0]  # signed area
+    b1 = 2*np.pi * np.array([ a2[1], -a2[0]]) / D
+    b2 = 2*np.pi * np.array([-a1[1],  a1[0]]) / D
     B = np.column_stack((b1, b2))
 
 
