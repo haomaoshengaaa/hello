@@ -130,7 +130,8 @@ def write_kpoints(filename, kpoints, mode='line', coord_sys='reciprocal'):
 
 def sample_and_add_kz(kxy_array, kz_num):
     n = kxy_array.shape[0]
-    kz_values = np.linspace(-0.5, 0.5, kz_num, endpoint=True)
+    # we only sample the positive kz because of the symmetry of kz and -kz
+    kz_values = np.linspace(0, 0.5, kz_num, endpoint=True)
     kz_column = np.repeat(kz_values, n)[:, np.newaxis]
     kxy_repeated = np.tile(kxy_array, (kz_num, 1))
     return np.hstack((kxy_repeated, kz_column))
