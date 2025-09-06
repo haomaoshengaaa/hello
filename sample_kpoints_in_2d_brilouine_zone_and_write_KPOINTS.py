@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.spatial import Voronoi
 from shapely.geometry import Polygon,Point
-
+import os
 
 def sample_2d_brillouin_zone(a1, a2, grid_size=100, center_rec=(0.0,0.0), radius=None):
     """
@@ -129,6 +129,7 @@ def write_kpoints(filename, kpoints, mode='line', coord_sys='reciprocal'):
         print(f"{out_name} written")
 
 def sample_and_add_kz(kxy_array, kz_num):
+    kxy_array = np.array(kxy_array)
     n = kxy_array.shape[0]
     # we only sample the positive kz because of the symmetry of kz and -kz
     kz_values = np.linspace(0, 0.5, kz_num, endpoint=True)
