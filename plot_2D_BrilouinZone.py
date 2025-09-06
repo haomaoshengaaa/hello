@@ -46,11 +46,14 @@ def plot_2d_brillouin_zone(a1,
     a1 = np.array(a1, dtype=float)
     a2 = np.array(a2, dtype=float)
 
-    # Compute unit cell area and reciprocal vectors
-    area = np.abs(a1[0]*a2[1] - a1[1]*a2[0])
-    b1 = 2 * np.pi * np.array([-a2[1], a2[0]]) / area
-    b2 = 2 * np.pi * np.array([ a1[1], -a1[0]]) / area
+
+    # real→reciprocal basis
+    D = a1[0]*a2[1] - a1[1]*a2[0]  # signed area
+    b1 = 2*np.pi * np.array([ a2[1], -a2[0]]) / D
+    b2 = 2*np.pi * np.array([-a1[1],  a1[0]]) / D
     B = np.column_stack((b1, b2))
+
+                      
 
     # Generate reciprocal lattice points
     rec_points = []
