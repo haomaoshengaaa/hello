@@ -13,6 +13,7 @@ num_kpts = pswfc._nkpts
 num_bands = pswfc._nbands
 Efermi = pswfc._efermi
 kvecs = pswfc._kvecs
+band_vals = pswfc._bands # shape (nspin, nkpts, nbands)
 
 # if you want to save the pseudo charge density |psi|**2  in the CHGCAR format
 phi = pswfc.get_ps_wfc(ikpt=1, iband=101, ngrid=pswfc_plw._ngrid * 2)
