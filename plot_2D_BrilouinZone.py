@@ -6,6 +6,84 @@ from adjustText import adjust_text
 import os
 import shutil
 
+def compute_2d_reciprocal_and_bz(a1, a2, n_range=2):
+    """
+    Compute 2D reciprocal lattice vectors and the first Brillouin zone polygon vertices.
+
+    Parameters
+    ----------
+    a1, a2 : array-like, shape (2,)
+        Real-space lattice vectors.
+    n_range : int, default=2
+        Range for generating reciprocal lattice points: [-n_range, n_range].
+
+    Returns
+    -------
+    b1, b2 : ndarray shape (2,)
+        Reciprocal lattice vectors.
+    B : ndarray shape (2,2)
+        Matrix with columns [b1, b2]. So b1 and b2 are the first and second column of B.
+        If you have a k vector (in relative coordinate) k_rel, and you want to transform it to cartesian
+        coordinates in reciprocal space, then we wil have 
+
+                                k_cartesian = B @ k_rel
+        the inverse relation is: k_rel = np.linalg.solve(B,k_cartesian)
+
+        If you have many k vectors (in relative coordinates) k_rel_arr, which is an array of size (M,2),        and you want to transform all k vectors to cartesian coodinates in one shot, then we will have
+                                
+                                k_cartesian_arr = k_rel_arr @ B.T
+
+
+    rec_points : ndarray shape ((2*n_range+1)**2, 2)
+        Generated reciprocal lattice points (Cartesian coords).
+    ordered : ndarray shape (M+1, 2)
+        Ordered (closed) polygon vertex coordinates of the 1st Brillouin zone boundary.
+    n_unique : int
+        Number of unique vertices (ordered excludes duplicate closing vertex).
+    vor : scipy.spatial.Voronoi
+        The Voronoi diagram object (returned in case user wants it).
+    """
+    a1 = np.array(a1, dtype=float)
+    a2 = np.array(a2, dtype=float)
+
+    # real→reciprocal basis
+    D = a1[0]*a2[1] - a1[1]*a2[0]  # signed area
+    b1 = 2*np.pi * np.array([ a2[1], -a2[0]]) / D
+    b2 = 2*np.pi * np.array([-a1[1],  a1[0]]) / D
+    B = np.column_stack((b1, b2))
+
+    # Generate reciprocal lattice points
+    rec_points = []
+    for i in range(-n_range, n_range+1):
+        for j in range(-n_range, n_range+1):
+            rec_points.append(i * b1 + j * b2)
+    rec_points = np.array(rec_points)
+
+    # Voronoi diagram and region for origin
+    vor = Voronoi(rec_points)
+    # find the region_index for the origin's region
+    region_index = next(
+        (r for (pt, r) in zip(rec_points, vor.point_region) if np.allclose(pt, 0)),
+        None
+    )
+    if region_index is None:
+        raise ValueError("Origin not found in reciprocal points.")
+
+    # Extract, order, and close vertices
+
+    # find the vertice coordinates (in absolute coordinates in reciprocal space) 
+    # of the voronoi region centered around origin 
+    verts = vor.vertices[vor.regions[region_index]]
+    # construct the polygon representing the voronoi region centered around origin
+    poly = Polygon(verts)
+    # get the ordered coordinates for all the vertices around the polygon. 
+    # (the last coordinate is the same as the first to close the polygon)
+    ordered = np.array(poly.exterior.coords)
+    n_unique = len(ordered) - 1
+
+    return b1, b2, B, rec_points, ordered, n_unique, vor
+
+
 def plot_2d_brillouin_zone(a1,
                          a2,
                          user_points_reciprocal=None,
@@ -42,40 +120,8 @@ def plot_2d_brillouin_zone(a1,
     fig, ax : matplotlib Figure and Axes
         The figure and axes objects with the Brillouin Zone plot.
     """
-    # Convert inputs
-    a1 = np.array(a1, dtype=float)
-    a2 = np.array(a2, dtype=float)
-
-
-    # real→reciprocal basis
-    D = a1[0]*a2[1] - a1[1]*a2[0]  # signed area
-    b1 = 2*np.pi * np.array([ a2[1], -a2[0]]) / D
-    b2 = 2*np.pi * np.array([-a1[1],  a1[0]]) / D
-    B = np.column_stack((b1, b2))
-
-                      
-
-    # Generate reciprocal lattice points
-    rec_points = []
-    for i in range(-n_range, n_range+1):
-        for j in range(-n_range, n_range+1):
-            rec_points.append(i * b1 + j * b2)
-    rec_points = np.array(rec_points)
-
-    # Voronoi diagram and region for origin
-    vor = Voronoi(rec_points)
-    region_index = next(
-        (r for (pt, r) in zip(rec_points, vor.point_region) if np.allclose(pt, 0)),
-        None
-    )
-    if region_index is None:
-        raise ValueError("Origin not found in reciprocal points.")
-
-    # Extract, order, and close vertices
-    verts = vor.vertices[vor.regions[region_index]]
-    poly = Polygon(verts)
-    ordered = np.array(poly.exterior.coords)
-    n_unique = len(ordered) - 1
+    # Use the separated computation function
+    b1, b2, B, rec_points, ordered, n_unique, vor = compute_2d_reciprocal_and_bz(a1, a2, n_range=n_range)
 
     # Begin plotting
     fig, ax = plt.subplots(figsize=figsize)
@@ -92,7 +138,7 @@ def plot_2d_brillouin_zone(a1,
              fc='purple', ec='purple', length_includes_head=True)
     ax.text(b2[0]*1.1, b2[1]*1.1, 'b2', color='purple')
 
-    # Label vertices in reciprocal basis
+    # Label vertices in reciprocal basis (plot with absolute coordinate but writing relative coordinate)
     for v in ordered[:n_unique]:
         c = np.linalg.solve(B, v)
         ax.text(v[0], v[1], f"({c[0]:.2f}, {c[1]:.2f})",
@@ -136,8 +182,7 @@ def plot_2d_brillouin_zone(a1,
     ax.set_xlabel(r"$k_x$")
     ax.set_ylabel(r"$k_y$")
     ax.axis('equal')
-    ax.legend(["Zone boundary", "Origin", "b1, b2", "Vertices", "Midpoints", "User points"],
+    ax.legend(["Zone","Zone boundary", "Origin", "b1", "b2", "Midpoints"],
               loc='upper right', fontsize='small')
     plt.show()
     return fig, ax
-
