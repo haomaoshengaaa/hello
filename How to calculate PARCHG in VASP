@@ -1,0 +1,17 @@
+First you need to do a scf calculation and get WAVECAR, because in the calculation of PARCHG VASP needs to load a converged WAVECAR. Remember to set ISYM=-1 to turn off the symmetry otherwise VASP will mess up the weights for kpoints in 
+the PARCHG calculation.
+
+After you finished scf calculation. You should copy INCAR POSCAR POTCAR KPOINTS WAVECAR to a new folder to prepare the partial charge calculation.
+
+Next, we should add some lines to the end of old INCAR, settings of INCAR depends on what kind of PARCHG you need
+
+1. 
+If you just want to specify an energy interval [E1, E2] (with respect to fermi) and expect VASP to calculate the summed charge density for all kpoints and all bands in that energy interval, you should add several lines below:
+
+ISTART=1
+LPARD = T 
+EINT = -1 1  # set the energy interval, if NBMOD=-2 they are considered as absolute energy values, if NBMOD=-3 they are considered as energy values with respect to fermi
+NBMOD = -3
+
+2. 
+to be done
