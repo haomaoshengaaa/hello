@@ -1,0 +1,23 @@
+For example, if you want to execute the command
+flare-otf otf_train.yaml
+where flare-otf is the actual executable and otf_train.yaml is the input parameter
+
+we can do this:
+nohup flare-otf otf_train.yaml > output.log 2>&1 &
+
+Explanation: The standard output is redirected to the output.log file (if not specified, the default is nohup.out). 
+2>&1 redirects standard error to the same file as well, so all output is recorded in output.log. 
+The last symbol & puts the command in the background.
+
+After execution, it will display something like: 
+[1] 12346
+
+
+which shows the process id of that execution
+
+
+we can close the terminal and open it again, and try to check if the process is still there
+ps aux | grep flare-otf
+
+this will display all the recently running commands that contains the string flare-otf
+
