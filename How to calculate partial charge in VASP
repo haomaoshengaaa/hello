@@ -46,7 +46,7 @@ KPOINTS：必须与第二步非自洽计算所用的KPOINTS文件完全一致。
 
 WAVECAR：直接复制第二步计算得到的WAVECAR文件。
 
-INCAR：设置LPARD后处理参数。例如：
+INCAR：删除ICHARG=11，设置LWAVE=F, 然后设置LPARD后处理参数。例如：
 
 1. 
 If you just want to specify an energy interval [E1, E2] (with respect to fermi) and expect VASP to calculate the summed charge density for all kpoints and all bands in that energy interval, you should add several lines below:
