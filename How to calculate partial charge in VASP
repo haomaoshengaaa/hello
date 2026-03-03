@@ -1,9 +1,52 @@
-First you need to do a scf calculation and get WAVECAR, because in the calculation of PARCHG VASP needs to load a converged WAVECAR. Remember to set ISYM=-1 to turn off the symmetry otherwise VASP will mess up the weights for kpoints in 
-the PARCHG calculation.
+第一步：高质量的自洽计算（SCF）
+这一步的目的是获得一个精确的、收敛的基态电荷密度（CHGCAR），为后续计算提供一个准确的物理环境。
 
-After you finished scf calculation. You should copy INCAR POSCAR POTCAR KPOINTS WAVECAR to a new folder to prepare the partial charge calculation.
+所需文件：标准的POSCAR，一个较密的均匀k点网格，POTCAR，INCAR（包含标准的自洽计算参数，LWAVE = .FALSE.，LCHARG = .TRUE.）。
 
-Next, we should add some lines to the end of old INCAR, settings of INCAR depends on what kind of PARCHG you need
+输出文件：最重要的输出是CHGCAR（总电荷密度）。
+
+
+
+
+
+第二步：非自洽计算（NSCF）—— 生成包含目标k点的WAVECAR
+这是最关键的一步。我们固定住第一步得到的电荷密度，在包含你想要的目标k点（例如能带路径）的k点网格上进行一次非自洽计算。这次计算会生成包含了这些特定k点波函数信息的WAVECAR。
+
+所需文件：
+
+POSCAR、POTCAR：与第一步相同。
+
+INCAR：需要做以下重要修改：
+
+ICHARG = 11：这是核心！ 这个设置告诉VASP读取第一步的CHGCAR文件，并在计算中保持电荷密度不变。这样计算出的波函数（WAVECAR）就对应于你在新k点上的解，同时又基于正确的基态电荷密度。
+
+其他参数（ENCUT， ISPIN等）必须与第一步完全一致。
+
+LWAVE = .TRUE.（确保输出WAVECAR）。
+
+LCHARG = .FALSE.（无需再输出CHGCAR）。
+
+ISYM = -1  (我们必须完全关闭对称性以使得计算中的k点权重都是等同的，只有这样才能保证在计算PARCHG的过程中每个K点都等价地被处理或者被加和)
+
+KPOINTS：这里放入你真正想计算PARCHG的k点路径或特殊点，例如能带计算所用的高对称路径。这些点可以完全不同于第一步的均匀网格。
+
+输出文件：最重要的输出是WAVECAR，它现在包含了你在新KPOINTS文件中定义的所有k点的波函数。
+
+
+
+
+第三步：部分电荷密度（PARCHG）后处理计算
+现在，我们拥有了一个包含了目标k点的WAVECAR文件，可以基于它来计算PARCHG了。
+
+所需文件：
+
+POSCAR、POTCAR：与之前保持一致。
+
+KPOINTS：必须与第二步非自洽计算所用的KPOINTS文件完全一致。VASP在计算PARCHG时，会根据这个KPOINTS文件去读取WAVECAR中对应k点的信息。
+
+WAVECAR：直接复制第二步计算得到的WAVECAR文件。
+
+INCAR：设置LPARD后处理参数。例如：
 
 1. 
 If you just want to specify an energy interval [E1, E2] (with respect to fermi) and expect VASP to calculate the summed charge density for all kpoints and all bands in that energy interval, you should add several lines below:
@@ -14,4 +57,11 @@ EINT = -1 1  # set the energy interval, if NBMOD=-2 they are considered as absol
 NBMOD = -3
 
 2. 
-to be done
+If you want to specify an energy interval [E1, E2] (with respect to fermi) and expect VASP to calculate the individual charge density for all kpoints and all bands in that energy interval, you should add several lines below:
+
+ISTART=1
+LPARD = T 
+EINT = -1 1  # set the energy interval, if NBMOD=-2 they are considered as absolute energy values, if NBMOD=-3 they are considered as energy values with respect to fermi
+NBMOD = -3
+LSEPB = T     ! 是否按能带分开输出 
+LSEPK = T     ! 是否按k点分开输出 
