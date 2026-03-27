@@ -1,9 +1,11 @@
 1. If your system has d electrons (usually exist in transition metals like Pt, Fe and so on), you need to set
     LMAXMIX=4 (up to the quantum number 4 to pass more information in mixing process of charge density during SCF steps, for a fast convergence)
     LASPH = T (Non-spherical contributions in PAW spheres, crucial for d-electrons)
+
 2. If you want to include vdw corrections, we recommend use SCAN + rvv10, because SCAN captures semilocal exchange-correlation and 
     even some non-local like bonding trends, which is relatively compatible with rvv10
     On the other hand, SCAN + D3 or SCAN + TS can sometimes double count dispersion or overbind, unless you have benchmarked the system.
     SCAN + vdW-DF variants are not automatically wrong, but they are less “default-safe” than SCAN+rVV10
+
 3. The POTCAR files used should contain information about kinetic energy density, that is to say, if you do "grep kinetic POTCAR" there must be 
     some output
