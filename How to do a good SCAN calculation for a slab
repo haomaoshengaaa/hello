@@ -9,3 +9,8 @@
 
 3. The POTCAR files used should contain information about kinetic energy density, that is to say, if you do "grep kinetic POTCAR" there must be 
     some output
+
+
+4. If your system is a slab, think about the dipole correction. Usually we set the dipole correction in z direction in VASP with these two tags:
+    LDIPOL = .TRUE.
+    IDIPOL = 3      # surface normal (usually z)
