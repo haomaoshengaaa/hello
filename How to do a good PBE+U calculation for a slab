@@ -1,0 +1,17 @@
+1. If your system has d electrons (usually exist in transition metals like Pt, Fe and so on), you need to set
+    LMAXMIX=4 (up to the quantum number 4 to pass more information in mixing process of charge density during SCF steps, for a fast convergence)
+    LASPH = T (Non-spherical contributions in PAW spheres, crucial for d-electrons)
+
+2. If you want to include vdw corrections(usually you need, for safety), just use D3 correction, which is a relatively safe choice in combination with PBE+U
+
+
+3. If your system is a slab, think about the dipole correction. Usually we set the dipole correction in z direction in VASP with these two tags:
+    LDIPOL = .TRUE.
+    IDIPOL = 3      # surface normal (usually z)
+
+
+4. Of course U parameter should be adjusted, usually the tags are(just an example)
+    LDAU = .TRUE.
+    LDAUTYPE = 2
+    LDAUL = 2 -1          # 对Fe设2 (d电子)，O设-1
+    LDAUU = 3.0 0.0       # U_Fe = 4 eV, U_O = 0 
