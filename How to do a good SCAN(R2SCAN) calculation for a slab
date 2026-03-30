@@ -18,4 +18,4 @@
 5. Usually we recommend you to set ADDGRID=T to improve the force accuracy in METAGGA calculation
 
 
-6. Remember to use ALGO=ALL if you find the convergence is not reached in 100 electronic steps.
+6. Remember to use ALGO=ALL if you find the convergence is not reached in 100 electronic steps with normal algorithm.
