@@ -1,0 +1,94 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+"""
+Read structure from vasprun.xml and write an extxyz file with per-atom magnetic moments.
+- Structure: read from vasprun.xml
+- Per-atom magnetic moments: read from OUTCAR magnetization (x) block, last column "tot"
+- Output: output.extxyz
+"""
+
+from pathlib import Path
+import numpy as np
+from ase.io import read, write
+
+
+def read_last_site_magmoms_from_outcar(outcar_path, natoms):
+    """
+    Parse the last 'magnetization (x)' block in OUTCAR and return per-atom
+    magnetic moments (the last column, i.e. 'tot').
+
+    Returns
+    -------
+    np.ndarray of shape (natoms,)
+    """
+    outcar_path = Path(outcar_path)
+    if not outcar_path.is_file():
+        return None
+
+    with outcar_path.open("r", encoding="utf-8", errors="ignore") as f:
+        lines = f.readlines()
+
+    # Find the last occurrence of "magnetization (x)"
+    last_idx = -1
+    for i, line in enumerate(lines):
+        if "magnetization (x)" in line:
+            last_idx = i
+
+    if last_idx < 0:
+        return None
+
+    # Parse lines after the block header.
+    # Typical OUTCAR layout:
+    # magnetization (x)
+    # # of ion       s       p       d       tot
+    # ------------------------------------------
+    #    1       ...
+    #    2       ...
+    magmoms = []
+    for line in lines[last_idx + 1:]:
+        parts = line.split()
+        if len(parts) >= 5 and parts[0].isdigit():
+            try:
+                magmoms.append(float(parts[-1]))  # last column = tot
+            except ValueError:
+                pass
+
+            if len(magmoms) == natoms:
+                break
+
+        # Stop if we have already started collecting and hit a blank line
+        if magmoms and not line.strip():
+            break
+
+    if len(magmoms) != natoms:
+        return None
+
+    return np.asarray(magmoms, dtype=float)
+
+
+def main():
+    vasprun_file = "vasprun.xml"
+    outcar_file = "OUTCAR"
+    output_file = "output.extxyz"
+
+    # Read the last frame from vasprun.xml
+    atoms = read(vasprun_file, index=-1, format="vasp-xml")
+
+    # Try to get per-atom magnetic moments from OUTCAR
+    magmoms = read_last_site_magmoms_from_outcar(outcar_file, len(atoms))
+
+    if magmoms is None:
+        print("Warning: no per-atom magnetic moments found in OUTCAR. Writing zeros.")
+        magmoms = np.zeros(len(atoms), dtype=float)
+
+    # Store as a per-atom array so extxyz writes it as an extra column
+    atoms.set_array("magmom", magmoms)
+
+    # Write extended XYZ
+    write(output_file, atoms, format="extxyz")
+    print(f"Wrote {output_file}")
+
+
+if __name__ == "__main__":
+    main()
