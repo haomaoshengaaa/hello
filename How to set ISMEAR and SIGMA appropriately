@@ -1,0 +1,6 @@
+If you are have ISMEAR = 0 and want to know which SIGMA value is good. Please start from a reasonable value and do a test vasp run, 
+for example SIGMA=0.1 and check the entropy per atom from OUTCAR with the bash command below
+
+awk '/NIONS/ {n=$NF} /entropy T\*S/ {e=$NF} END {printf "%.4f meV/atom\n", e/n*1000}' OUTCAR
+
+The value it returns has to be around or smaller than 1 meV per atom
