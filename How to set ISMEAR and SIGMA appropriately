@@ -11,4 +11,6 @@ The value it returns has to be around or smaller than 1 meV per atom
 2. 
 
 If you have a metallic system, which means your system has bands smoothly crossing the fermi level, you can use ISMEAR=0 and ISMEAR=1. Usually we recommend ISMEAR=1 for metallic system
-because usually it converges faster with the same K-resolution compared with ISMEAR=0. ISMEAR=0 is a more general choice but not extremely appropriate for metallic system.
+because usually it converges faster with the same K-resolution compared with ISMEAR=0. 
+
+But you can still use ISMEAR=0 with a very small SIGMA(e.g., 0.02) for metallic system. This is a general choice but not optimal for metallic system.
