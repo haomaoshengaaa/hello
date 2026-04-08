@@ -70,7 +70,7 @@ def read_last_site_magmoms_from_outcar(outcar_path, natoms):
 def main():
     vasprun_file = "vasprun.xml"
     outcar_file = "OUTCAR"
-    output_file = "output.extxyz"
+    output_file = "final_configuration_with_magmom.extxyz"
 
     # Read the last frame from vasprun.xml
     atoms = read(vasprun_file, index=-1, format="vasp-xml")
