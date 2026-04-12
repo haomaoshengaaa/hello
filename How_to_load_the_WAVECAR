@@ -16,7 +16,7 @@ kvecs = pswfc._kvecs
 band_vals = pswfc._bands # shape (nspin, nkpts, nbands)
 
 # if you want to save the pseudo charge density |psi|**2  in the CHGCAR format (ikpt and iband are 1-based)
-phi = pswfc.get_ps_wfc(ikpt=1, iband=101, ngrid=pswfc_plw._ngrid * 2)
+phi = pswfc.get_ps_wfc(ikpt=1, iband=101, ngrid=pswfc._ngrid * 2)
 pswfc.save2vesta(np.abs(phi)**2, poscar='./POSCAR',prefix='test')
 
 # if you want to directly save the WAVEfunction in the CHGCAR format (ikpt and iband are 1-based)
