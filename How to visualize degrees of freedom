@@ -1,0 +1,68 @@
+import numpy as np
+from ase.io import read, write
+
+
+def read_selective_flags_from_poscar(filename):
+    """
+    Read Selective dynamics flags from a VASP POSCAR/CONTCAR file.
+
+    Returns
+    -------
+    flags : np.ndarray, shape (natoms, 3), dtype=int
+        T -> 1, F -> 0
+    """
+    with open(filename, "r") as f:
+        lines = f.readlines()
+
+    # line indices are 0-based
+    # POSCAR structure:
+    # 0 comment
+    # 1 scale
+    # 2-4 cell
+    # 5 species names
+    # 6 numbers
+    # optional 7 Selective dynamics
+    # next line Direct/Cartesian
+    # then positions
+
+    counts = [int(x) for x in lines[6].split()]
+    natoms = sum(counts)
+
+    line7 = lines[7].strip().lower()
+
+    if line7.startswith("s"):
+        coord_line = 8
+        pos_start = 9
+    else:
+        raise ValueError("This POSCAR does not contain Selective dynamics flags.")
+
+    flags = []
+
+    for i in range(natoms):
+        parts = lines[pos_start + i].split()
+
+        if len(parts) < 6:
+            raise ValueError(
+                f"Atom line {pos_start + i + 1} does not contain three Selective dynamics flags."
+            )
+
+        tf = parts[3:6]
+        flags.append([1 if x.upper().startswith("T") else 0 for x in tf])
+
+    return np.array(flags, dtype=int)
+
+
+poscar = "POSCAR"
+out_xyz = "structure_with_free_flags.extxyz"
+
+atoms = read(poscar, format="vasp")
+
+flags = read_selective_flags_from_poscar(poscar)
+
+atoms.set_array("free_x", flags[:, 0])
+atoms.set_array("free_y", flags[:, 1])
+atoms.set_array("free_z", flags[:, 2])
+
+write(out_xyz, atoms, format="extxyz")
+
+print(f"Wrote {out_xyz}")
