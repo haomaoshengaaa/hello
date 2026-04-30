@@ -6,11 +6,11 @@ import matplotlib.pyplot as plt
 # ===============================
 filename = "REFORMATTED_BAND.dat"   # Path to band data file
 klabels_file = "KLABELS"            # Path to KLABELS file
-energy_shift = 4.53                 # Energy shift in eV
+energy_shift = 0                 # Energy shift in eV
 output_png = "band_structure.png"   # Output image file name
 ymin = -7.5                          # Minimum energy for y-axis (eV)
 ymax = 10                           # Maximum energy for y-axis (eV)
-ylabel = r"$E_{kin}$"
+ylabel = r"$E-E_{f}$"
 # ===============================
 
 
