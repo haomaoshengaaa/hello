@@ -1,0 +1,100 @@
+import numpy as np
+import matplotlib.pyplot as plt
+
+# ===============================
+# User-specified parameters
+# ===============================
+filename = "REFORMATTED_BAND.dat"   # Path to band data file
+klabels_file = "KLABELS"            # Path to KLABELS file
+energy_shift = 4.53                 # Energy shift in eV
+output_png = "band_structure.png"   # Output image file name
+ymin = -7.5                          # Minimum energy for y-axis (eV)
+ymax = 10                           # Maximum energy for y-axis (eV)
+ylabel = r"$E_{kin}$"
+# ===============================
+
+
+def load_klabels(klabels_file):
+    """
+    Load high-symmetry labels and coordinates from a KLABELS file.
+    """
+    labels = []
+    coords = []
+
+    with open(klabels_file, "r", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+
+            # Skip empty lines
+            if not line:
+                continue
+
+            # Skip header or tip lines
+            if line.startswith("K-Label") or line.startswith("*"):
+                continue
+
+            parts = line.split()
+
+            # Valid data lines usually contain: label coordinate
+            if len(parts) < 2:
+                continue
+
+            label = parts[0]
+
+            try:
+                coord = float(parts[-1])
+            except ValueError:
+                continue
+
+            # Replace G with Gamma symbol for plotting
+            if label == "G":
+                label = r"$\Gamma$"
+
+            labels.append(label)
+            coords.append(coord)
+
+    return coords, labels
+
+
+# 1. Load the band structure data
+data = np.loadtxt(filename)
+k_path = data[:, 0]    # First column: K-path
+bands = data[:, 1:]    # Remaining columns: energy bands
+
+# 2. Apply energy shift
+bands -= energy_shift
+
+# 3. Load high-symmetry points from KLABELS
+hs_coords, hs_labels = load_klabels(klabels_file)
+
+# 4. Create the plot
+fig, ax = plt.subplots(figsize=(8, 6))
+
+# Plot all bands
+for i in range(bands.shape[1]):
+    ax.plot(k_path, bands[:, i], color='b', linewidth=1)
+
+# Draw vertical lines at high-symmetry points
+for x in hs_coords:
+    ax.axvline(x=x, color='gray', linestyle='-', linewidth=0.8, alpha=0.7)
+
+# Set y-range
+ax.set_ylim(ymin, ymax)
+
+# Set x-ticks and labels
+ax.set_xticks(hs_coords)
+ax.set_xticklabels(hs_labels)
+
+# Remove extra margin on left and right
+ax.set_xlim(k_path.min(), k_path.max())
+ax.margins(x=0)
+
+# Labels and title
+ax.set_ylabel(ylabel)
+ax.set_title("Band Structure")
+
+
+# Adjust layout and save
+plt.tight_layout()
+plt.savefig(output_png, dpi=300)
+plt.show()
