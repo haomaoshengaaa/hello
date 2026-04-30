@@ -65,3 +65,17 @@ EINT = -1 1  # set the energy interval, if NBMOD=-2 they are considered as absol
 NBMOD = -3
 LSEPB = T     ! 是否按能带分开输出 
 LSEPK = T     ! 是否按k点分开输出 
+
+
+3.If you want to specify an energy interval [E1, E2] (with respect to fermi) and expect VASP to calculate the partial
+charge for all the bands in that energy range for a specific kpoint (for example, the first kpoint), you should add
+lines like below:
+
+ISTART=1
+LPARD = T 
+LSEPB = T     ! 是否按能带分开输出
+LSEPK = T     ! 是否按k点分开输出                                                                                                                 
+NBMOD=-3
+EINT = 0 26
+KPUSE = 1 
+
