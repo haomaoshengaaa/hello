@@ -1,0 +1,136 @@
+from pathlib import Path
+import re
+
+from pymatgen.io.vasp.outputs import Eigenval
+from pymatgen.electronic_structure.core import Spin
+
+
+def read_fermi_from_doscar(doscar_path="DOSCAR"):
+    """
+    从 DOSCAR 第 6 行读取费米能级。
+    VASP DOSCAR 第 6 行通常格式类似：
+    Emax Emin NEDOS Efermi weight
+    """
+    doscar_path = Path(doscar_path)
+
+    with doscar_path.open("r") as f:
+        lines = f.readlines()
+
+    if len(lines) < 6:
+        raise ValueError(f"{doscar_path} 文件少于 6 行，无法读取费米能级")
+
+    sixth_line = lines[5].split()
+
+    if len(sixth_line) < 4:
+        raise ValueError(f"{doscar_path} 第 6 行格式异常：{lines[5]}")
+
+    # 你说的是“第三个数字”，但按 VASP DOSCAR 标准，
+    # 第 6 行第 4 个数字通常是费米能级。
+    #
+    # 对于你给出的例子：
+    # 102.19531148 -18.59170183 301 6.69598395 1.00000000
+    # 费米能级是 6.69598395，也就是第 4 个数字，Python index = 3。
+    efermi = float(sixth_line[3])
+    print(f"Found fermi level {efermi} in DOSCAR")
+
+    return efermi
+
+
+def get_parchg_state_energies(
+    eigenval_path="pbe_calculation/EIGENVAL",
+    doscar_path="DOSCAR",
+    parchg_dir=".",
+    spin=Spin.up,
+):
+    """
+    扫描 parchg_dir 下所有 PARCHG.????.???? 文件，
+    返回每个 PARCHG 文件对应的 band/k-point 能量信息。
+
+    文件名格式假设为：
+        PARCHG.0009.0001
+
+    其中：
+        0009 -> 第 9 个 band
+        0001 -> 第 1 个 k-point
+
+    注意：
+        VASP 文件名里的 band 和 k-point 一般是从 1 开始编号；
+        Python 数组索引从 0 开始，因此需要减 1。
+    """
+
+    eigenval = Eigenval(eigenval_path)
+    efermi = read_fermi_from_doscar(doscar_path)
+
+    eigenvalues = eigenval.eigenvalues[spin]
+    # shape: (nkpt, nbands, 2)
+    # eigenvalues[k_index, band_index, 0] = eigenvalue
+    # eigenvalues[k_index, band_index, 1] = occupation
+
+    nkpt = eigenval.nkpt
+    nbands = eigenval.nbands
+
+    parchg_dir = Path(parchg_dir)
+
+    pattern = re.compile(r"^PARCHG\.(\d+)\.(\d+)$")
+
+    results = []
+
+    for file_path in sorted(parchg_dir.glob("PARCHG.*.*")):
+        match = pattern.match(file_path.name)
+
+        if match is None:
+            continue
+
+        band_number = int(match.group(1))   # 例如 0009 -> 9
+        kpt_number = int(match.group(2))    # 例如 0001 -> 1
+
+        band_index = band_number - 1
+        kpt_index = kpt_number - 1
+
+        if not (0 <= band_index < nbands):
+            raise IndexError(
+                f"{file_path.name}: band={band_number} 超出 EIGENVAL 范围，"
+                f"EIGENVAL 中共有 {nbands} 个 bands"
+            )
+
+        if not (0 <= kpt_index < nkpt):
+            raise IndexError(
+                f"{file_path.name}: k-point={kpt_number} 超出 EIGENVAL 范围，"
+                f"EIGENVAL 中共有 {nkpt} 个 k-points"
+            )
+
+        energy = eigenvalues[kpt_index, band_index, 0]
+        occupation = eigenvalues[kpt_index, band_index, 1]
+
+        energy_minus_fermi = energy - efermi
+
+        results.append(
+            {
+                "file": str(file_path),
+                "band": band_number,
+                "kpoint": kpt_number,
+                "energy": energy,
+                "efermi": efermi,
+                "energy_minus_fermi": energy_minus_fermi,
+                "occupation": occupation,
+            }
+        )
+
+    return results
+
+
+results = get_parchg_state_energies(
+    eigenval_path="../2_wavecar_prepare/EIGENVAL",
+    doscar_path="../2_wavecar_prepare/DOSCAR",
+    parchg_dir=".",
+    spin=Spin.up,
+)
+
+for r in results:
+    print(
+        f"{r['file']:20s} "
+        f"band={r['band']:4d} "
+        f"kpt={r['kpoint']:4d} "
+        f"E-Ef={r['energy_minus_fermi']:12.6f} eV "
+        f"occ={r['occupation']:.4f}"
+    )
