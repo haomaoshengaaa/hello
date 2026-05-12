@@ -1,0 +1,112 @@
+import numpy as np
+import matplotlib.pyplot as plt
+
+
+def read_mobile_atoms(poscar="POSCAR"):
+    """Return a boolean list: True if atom has at least one T flag."""
+    with open(poscar) as f:
+        lines = [line.split() for line in f if line.strip()]
+
+    try:
+        counts = [int(x) for x in lines[6]]
+        natoms = sum(counts)
+
+        if lines[7][0].lower() != "selective":
+            raise ValueError("This script expects 'Selective dynamics' in POSCAR.")
+
+        coord_start = 9
+        atom_lines = lines[coord_start:coord_start + natoms]
+
+        if len(atom_lines) != natoms:
+            raise ValueError("Number of atom coordinate lines does not match POSCAR counts.")
+
+        mobile = []
+        for i, tokens in enumerate(atom_lines):
+            if len(tokens) < 6:
+                raise ValueError(f"Missing T/F flags for atom {i + 1}.")
+            flags = tokens[3:6]
+            mobile.append(any(flag.upper().startswith("T") for flag in flags))
+
+        return mobile
+
+    except Exception as e:
+        raise ValueError(f"Unsupported POSCAR format: {e}")
+
+
+def read_force_blocks(outcar="OUTCAR", natoms=None):
+    """Return a list of force arrays, one array per ionic step."""
+    blocks = []
+
+    with open(outcar, errors="ignore") as f:
+        lines = f.readlines()
+
+    i = 0
+    while i < len(lines):
+        if "POSITION" in lines[i] and "TOTAL-FORCE" in lines[i]:
+            start = i + 2
+            forces = []
+
+            for line in lines[start:start + natoms]:
+                data = line.split()
+                if len(data) < 6:
+                    raise ValueError("Unexpected force block format in OUTCAR.")
+                forces.append([float(x) for x in data[3:6]])
+
+            blocks.append(np.array(forces))
+            i = start + natoms
+        else:
+            i += 1
+
+    if not blocks:
+        raise ValueError("No TOTAL-FORCE blocks found in OUTCAR.")
+
+    return blocks
+
+
+def max_mobile_forces(force_blocks, mobile):
+    """Calculate max |F| among mobile atoms for each ionic step."""
+    mobile = np.array(mobile, dtype=bool)
+    max_forces = []
+
+    for forces in force_blocks:
+        f_mag = np.linalg.norm(forces[mobile], axis=1)
+        max_forces.append(f_mag.max())
+
+    return np.array(max_forces)
+
+
+def plot_forces(max_forces, output="max_force_history.png"):
+    steps = np.arange(1, len(max_forces) + 1)
+
+    plt.figure(figsize=(6, 4))
+    plt.semilogy(steps, max_forces, marker="o")
+    plt.xlabel("Ionic step")
+    plt.ylabel("Max force on mobile atoms / eV Å$^{-1}$")
+    plt.grid(True, which="both", alpha=0.3)
+    plt.tight_layout()
+    plt.savefig(output, dpi=300)
+    print(f"Saved plot to {output}")
+
+
+def main():
+    mobile = read_mobile_atoms("POSCAR")
+    print(mobile)
+    force_blocks = read_force_blocks("OUTCAR", natoms=len(mobile))
+    max_forces = max_mobile_forces(force_blocks, mobile)
+
+    #np.savetxt(
+    #    "max_force.dat",
+    #    np.column_stack([np.arange(1, len(max_forces) + 1), max_forces]),
+    #    header="ionic_step  max_force_eV_per_A",
+    #    fmt=["%d", "%.8f"],
+    #)
+
+    plot_forces(max_forces)
+
+    print(f"Found {len(mobile)} atoms, {sum(mobile)} mobile atoms.")
+    print(f"Found {len(force_blocks)} ionic steps.")
+    print(f"Final max mobile force = {max_forces[-1]:.6f} eV/Å")
+
+
+if __name__ == "__main__":
+    main()
