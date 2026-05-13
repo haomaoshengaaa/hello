@@ -90,6 +90,7 @@ def plot_forces(max_forces, output="max_force_history.png"):
 
 def main():
     mobile = read_mobile_atoms("POSCAR")
+    print(f"Mobile flags of atoms (only Mobile atoms will be included in force statistics):")
     print(mobile)
     force_blocks = read_force_blocks("OUTCAR", natoms=len(mobile))
     max_forces = max_mobile_forces(force_blocks, mobile)
