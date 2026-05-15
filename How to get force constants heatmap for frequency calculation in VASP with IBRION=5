@@ -1,0 +1,73 @@
+import numpy as np
+import matplotlib.pyplot as plt
+
+def read_hessian_from_outcar(filename):
+    with open(filename, 'r') as f:
+        lines = f.readlines()
+
+    start = None
+    for i, line in enumerate(lines):
+        if "SECOND DERIVATIVES" in line:
+            start = i
+            break
+
+    if start is None:
+        raise ValueError("No SECOND DERIVATIVES found")
+
+    # Skip to the column header line
+    i = start + 2
+    headers = lines[i].split()
+    ncol = len(headers)
+
+    data = []
+    row_labels = []
+
+    i += 1
+    while i < len(lines):
+        line = lines[i].strip()
+        if not line:
+            break
+
+        parts = line.split()
+        row_labels.append(parts[0])
+        values = list(map(float, parts[1:]))
+        data.append(values)
+
+        i += 1
+
+    matrix = np.array(data)
+    return matrix, row_labels
+
+
+def plot_hessian(matrix, labels):
+    fig, ax = plt.subplots(figsize=(8, 8))
+
+    im = ax.imshow(matrix)
+
+    # Add colorbar
+    plt.colorbar(im, ax=ax)
+
+    # Set axis ticks and labels
+    ax.set_xticks(np.arange(len(labels)))
+    ax.set_yticks(np.arange(len(labels)))
+    ax.set_xticklabels(labels, rotation=90)
+    ax.set_yticklabels(labels)
+
+    # Write the numerical value inside each cell
+    for i in range(matrix.shape[0]):
+        for j in range(matrix.shape[1]):
+            val = matrix[i, j]
+            ax.text(j, i, f"{val:.1f}",
+                    ha="center", va="center",
+                    color="white" if abs(val) > np.max(abs(matrix)) / 2 else "black",
+                    fontsize=6)
+
+    ax.set_title("Force Constant Matrix (Hessian)")
+    plt.tight_layout()
+    plt.savefig("force_constants_heatmap.png")
+
+
+# ===== Main program =====
+filename = "OUTCAR"  # Change this to your file name
+matrix, labels = read_hessian_from_outcar(filename)
+plot_hessian(matrix, labels)
