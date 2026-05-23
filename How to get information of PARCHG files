@@ -7,9 +7,10 @@ from pymatgen.electronic_structure.core import Spin
 
 def read_fermi_from_doscar(doscar_path="DOSCAR"):
     """
-    从 DOSCAR 第 6 行读取费米能级。
-    VASP DOSCAR 第 6 行通常格式类似：
-    Emax Emin NEDOS Efermi weight
+    Read the Fermi level from line 6 of DOSCAR.
+
+    In a standard VASP DOSCAR, line 6 usually has the format:
+        Emax Emin NEDOS Efermi weight
     """
     doscar_path = Path(doscar_path)
 
@@ -17,19 +18,18 @@ def read_fermi_from_doscar(doscar_path="DOSCAR"):
         lines = f.readlines()
 
     if len(lines) < 6:
-        raise ValueError(f"{doscar_path} 文件少于 6 行，无法读取费米能级")
+        raise ValueError(f"{doscar_path} has fewer than 6 lines, cannot read Fermi level")
 
     sixth_line = lines[5].split()
 
     if len(sixth_line) < 4:
-        raise ValueError(f"{doscar_path} 第 6 行格式异常：{lines[5]}")
+        raise ValueError(f"Unexpected format in line 6 of {doscar_path}: {lines[5]}")
 
-    # 你说的是“第三个数字”，但按 VASP DOSCAR 标准，
-    # 第 6 行第 4 个数字通常是费米能级。
+    # In a standard VASP DOSCAR, the Fermi level is the 4th value on line 6.
     #
-    # 对于你给出的例子：
+    # Example:
     # 102.19531148 -18.59170183 301 6.69598395 1.00000000
-    # 费米能级是 6.69598395，也就是第 4 个数字，Python index = 3。
+    # The Fermi level is 6.69598395, i.e. Python index 3.
     efermi = float(sixth_line[3])
     print(f"Found fermi level {efermi} in DOSCAR")
 
@@ -43,22 +43,30 @@ def get_parchg_state_energies(
     spin=Spin.up,
 ):
     """
-    扫描 parchg_dir 下所有 PARCHG.????.???? 文件，
-    返回每个 PARCHG 文件对应的 band/k-point 能量信息。
+    Scan all PARCHG.????.???? files in parchg_dir and return the
+    corresponding band/k-point energy information.
 
-    文件名格式假设为：
+    Assumed file name format:
         PARCHG.0009.0001
 
-    其中：
-        0009 -> 第 9 个 band
-        0001 -> 第 1 个 k-point
+    Here:
+        0009 -> band index 9
+        0001 -> k-point index 1
 
-    注意：
-        VASP 文件名里的 band 和 k-point 一般是从 1 开始编号；
-        Python 数组索引从 0 开始，因此需要减 1。
+    Note:
+        Band and k-point numbers in VASP-style file names are usually 1-based.
+        Python array indices are 0-based, so we subtract 1.
     """
 
     eigenval = Eigenval(eigenval_path)
+
+    num_spin = len(list(eigenval.eigenvalues.keys()))
+    if num_spin == 2:
+        raise ValueError(
+            "Spin-polarized EIGENVAL detected: num_spin = 2. "
+            "This script currently only supports non-spin-polarized calculations."
+        )
+
     efermi = read_fermi_from_doscar(doscar_path)
 
     eigenvalues = eigenval.eigenvalues[spin]
@@ -73,30 +81,38 @@ def get_parchg_state_energies(
 
     pattern = re.compile(r"^PARCHG\.(\d+)\.(\d+)$")
 
+    parchg_files = [
+        file_path
+        for file_path in sorted(parchg_dir.glob("PARCHG.*.*"))
+        if pattern.match(file_path.name)
+    ]
+
+    if not parchg_files:
+        raise FileNotFoundError(
+            f"No PARCHG files matching 'PARCHG.<band>.<kpoint>' were found in {parchg_dir}"
+        )
+
     results = []
 
-    for file_path in sorted(parchg_dir.glob("PARCHG.*.*")):
+    for file_path in parchg_files:
         match = pattern.match(file_path.name)
 
-        if match is None:
-            continue
-
-        band_number = int(match.group(1))   # 例如 0009 -> 9
-        kpt_number = int(match.group(2))    # 例如 0001 -> 1
+        band_number = int(match.group(1))
+        kpt_number = int(match.group(2))
 
         band_index = band_number - 1
         kpt_index = kpt_number - 1
 
         if not (0 <= band_index < nbands):
             raise IndexError(
-                f"{file_path.name}: band={band_number} 超出 EIGENVAL 范围，"
-                f"EIGENVAL 中共有 {nbands} 个 bands"
+                f"{file_path.name}: band={band_number} is out of range. "
+                f"EIGENVAL contains {nbands} bands"
             )
 
         if not (0 <= kpt_index < nkpt):
             raise IndexError(
-                f"{file_path.name}: k-point={kpt_number} 超出 EIGENVAL 范围，"
-                f"EIGENVAL 中共有 {nkpt} 个 k-points"
+                f"{file_path.name}: k-point={kpt_number} is out of range. "
+                f"EIGENVAL contains {nkpt} k-points"
             )
 
         energy = eigenvalues[kpt_index, band_index, 0]
@@ -120,8 +136,8 @@ def get_parchg_state_energies(
 
 
 results = get_parchg_state_energies(
-    eigenval_path="../2_wavecar_prepare/EIGENVAL",
-    doscar_path="../2_wavecar_prepare/DOSCAR",
+    eigenval_path="../wavecar_prepare/EIGENVAL",
+    doscar_path="../DOSCAR",
     parchg_dir=".",
     spin=Spin.up,
 )
