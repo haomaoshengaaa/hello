@@ -1,0 +1,36 @@
+import numpy as np
+from ase.io import read
+
+atoms = read("POSCAR")
+c = atoms.cell[2, 2]
+
+# z-coordinate of each atom (wrapped into cell)
+z = atoms.get_positions()[:, 2] % c
+
+# cluster atoms into layers by z
+order = np.argsort(z)
+z_sorted = z[order]
+
+layers = []
+tol = 1e-8  # Angstrom tolerance for grouping atoms into a layer
+current = [z_sorted[0]]
+for zi in z_sorted[1:]:
+    if zi - current[-1] < tol:
+        current.append(zi)
+    else:
+        layers.append(np.mean(current))
+        current = [zi]
+layers.append(np.mean(current))
+layers = np.array(layers)
+
+n = len(layers)
+print(f"Found {n} layers")
+print(f"Layer z-positions: {layers}")
+
+# distance from each layer to the layer above (periodic wrap for the top one)
+for i in range(n):
+    if i < n - 1:
+        d = layers[i + 1] - layers[i]
+    else:
+        d = (layers[0] + c) - layers[i]  # top -> bottom via periodicity
+    print(f"Layer {i} (z={layers[i]:.3f}): distance to layer above = {d:.4f} Angstrom")
