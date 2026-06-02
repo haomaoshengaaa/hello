@@ -1,0 +1,39 @@
+1. 
+you need a standard scf run to get the converged WAVECAR.
+setup POTCAR KPOINTS POSCAR accordingly
+For INCAR, you should be cautious about these settings
+
+EDIFF = 1E-8  # we set a very strict criterion because RPA usually needs high accuracy and well-converged WAVECAR
+ISMEAR = 0   # think about what smearing method you should use. Carefully select the smearing method for metal or semiconductor.
+SIGMA = 0.05
+
+
+2. 
+you need to load the WAVECAR generated from step 1 and calculate HF energy based on the loaded orbitals.
+copy INCAR POSCAR POTCAR KPOINTS WAVECAR in step 1 to a new folder, and change the following settings in INCAR
+    
+ALGO  = EIGENVAL
+NELM = 1
+LWAVE = F
+LHFCALC = T
+AEXX = 1.0  # ALDAC will be automatically set to 0.0 
+
+
+3.
+you need to calculate all the orbitals, including virtual orbitals, based on the initial wavefunction you get from step 1.
+copy INCAR POSCAR POTCAR KPOINTS WAVECAR in step 1 to a new folder, and change the following settings in INCAR
+
+# In the OUTCAR file of Step 1, search for maximum number of plane-waves
+NBANDS = maximum number of plane-waves (times 2 for vasp_gam)
+ALGO = Exact    # exact diagonalization
+LOPTICS = T  # this is optional. If your system is metal, it is better to turn it off
+
+
+4.
+you need to calculate RPA correlation energy now, based on the orbitals you get from step 3.
+copy INCAR POSCAR POTCAR KPOINTS WAVECAR in step 3 to a new folder, and change the following settings in INCAR
+
+ALGO = ACFDT # or RPA or RPAR
+NOMEGA = 12     #  For large gap insulators NOMEGA = 8 will suffice, while for semiconductors 10-12 suffices. For metals, you might need 16 or even more.
+
+
