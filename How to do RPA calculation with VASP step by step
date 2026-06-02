@@ -6,6 +6,7 @@ For INCAR, you should be cautious about these settings
 EDIFF = 1E-8  # we set a very strict criterion because RPA usually needs high accuracy and well-converged WAVECAR
 ISMEAR = 0   # think about what smearing method you should use. Carefully select the smearing method for metal or semiconductor.
 SIGMA = 0.05
+LWAVE = T # will be used in the following calculations
 
 
 2. 
