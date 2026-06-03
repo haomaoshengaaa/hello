@@ -36,5 +36,6 @@ copy INCAR POSCAR POTCAR KPOINTS WAVECAR in step 3 to a new folder, and change t
 
 ALGO = ACFDT # or RPA or RPAR
 NOMEGA = 12     #  For large gap insulators NOMEGA = 8 will suffice, while for semiconductors 10-12 suffices. For metals, you might need 16 or even more.
-
+LWAVE = F   # wavefunction from RPAR or RPA calculation is useless
+LCHARG = F  # we dont need charge density from RPA or RPAR calculation as well
 
