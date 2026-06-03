@@ -188,7 +188,7 @@ if __name__ == "__main__":
     # the data files are in this format: kpath_info_for_kpoint_index_0.txt, kpath_info_for_kpoint_index_1.txt, ...
     # Each data file should have its first column to be the stabilization parameter, i.e. height of slab
     # The rest columns are eigenvalues for the first band, second band, ...
-    txt_folder = "GK"
+    txt_folder_path = Path("GK/")
     
     # file pattern that will be searched in txt_folder
     txt_files = "kpath_info*.txt"
@@ -202,16 +202,16 @@ if __name__ == "__main__":
 
     # the target energy values of interest
     # at each target energy, the crossing will be found and the derivatve will be calculated
-    E0_values = np.arange(0, 30, 0.1)
+    E0_values = np.arange(4, 26, 0.1)
 
     # energy threshold as the maximal energy difference for each found adjacent energy-height points that crosses the target energy line
-    energy_threshold = 10000
+    energy_threshold = 0.2
 
 
-    plot_dir = Path(txt_folder) / "valid_pair_plots"
+    plot_dir = txt_folder_path / "valid_pair_plots"
     plot_dir.mkdir(parents=True, exist_ok=True)
 
-    for f in Path(txt_folder).glob(txt_files):
+    for f in txt_folder_path.glob(txt_files):
 
         # process the file name to get kpoint index
         ind_str = Path(f).stem.split("_")[-1]
@@ -262,9 +262,7 @@ if __name__ == "__main__":
                     if avg_deriv > derivative_threshold:
                         couplings[ie] += 1.0 / avg_deriv
 
-                    # here we add the inverse of derivative threshold, which is confusing!!!!
                     else:
-                        #couplings[ie] += 1.0 / derivative_threshold
                         couplings[ie] += 0
 
 
@@ -285,8 +283,9 @@ if __name__ == "__main__":
         # All the energy values done. Now we save coupling data
         # shape (N,2), where N is number of target energy values
         final_coupling_data = np.column_stack((E0_values, couplings))
+        output_coupling_file = txt_folder_path / f"coupling_for_kpoint_index_{ind_str}.txt"
         np.savetxt(
-            f"{txt_folder}/coupling_for_kpoint_index_{ind_str}.txt",
+            output_coupling_file,
             final_coupling_data,
             header="E_values couplings",
         )
