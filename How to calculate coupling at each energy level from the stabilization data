@@ -188,6 +188,7 @@ if __name__ == "__main__":
     # the data files are in this format: kpath_info_for_kpoint_index_0.txt, kpath_info_for_kpoint_index_1.txt, ...
     # Each data file should have its first column to be the stabilization parameter, i.e. height of slab
     # The rest columns are eigenvalues for the first band, second band, ...
+    # the coupling data will be saved to this folder, the plot of valid pairs will be saved to this folder
     txt_folder_path = Path("GK/")
     
     # file pattern that will be searched in txt_folder
