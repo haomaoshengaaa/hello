@@ -1,0 +1,292 @@
+import numpy as np
+from pathlib import Path
+import matplotlib.pyplot as plt
+
+
+def average_derivative_at_energy(heights, energies, E0, threshold=0.2, return_all=False):
+    """
+    Calculate the average numerical derivative at a given energy level.
+
+    Parameters:
+    -----------
+    heights : array-like
+        List or array of height values (sorted or unsorted)
+    energies : array-like
+        List or array of energy values corresponding to heights
+    E0 : float
+        Target energy level to find derivatives at
+    threshold : float, default=0.2
+        Maximum allowed energy difference between adjacent points (in eV)
+    return_all : bool, default=False
+        If True, returns all found derivatives and positions along with average
+
+    Returns:
+    --------
+    average_derivative : float or None
+        Average derivative at energy level E0. Returns None if no valid pairs found.
+    info_dict : dict (if return_all=True)
+        Dictionary containing:
+        - 'average_derivative': average value
+        - 'all_derivatives': list of found derivatives
+        - 'pairs': list of dicts with pair information
+        - 'num_pairs': number of valid pairs found
+    """
+    heights = np.array(heights, dtype=float)
+    energies = np.array(energies, dtype=float)
+
+    # Sort by height if not already sorted
+    if not np.all(np.diff(heights) >= 0):
+        sort_idx = np.argsort(heights)
+        heights = heights[sort_idx]
+        energies = energies[sort_idx]
+
+    derivatives = []
+    pairs_info = []
+
+    # Iterate through adjacent pairs
+    for i in range(len(heights) - 1):
+        h1, h2 = heights[i], heights[i + 1]
+        E1, E2 = energies[i], energies[i + 1]
+
+        # Check if energies straddle E0
+        if (E1 > E0 and E2 < E0) or (E1 < E0 and E2 > E0):
+            # Check energy difference threshold
+            if abs(E2 - E1) < threshold:
+                # Calculate derivative (dE/dh)
+                derivative = np.abs((E2 - E1) / (h2 - h1))
+                derivatives.append(derivative)
+                pairs_info.append(
+                    {
+                        "height1": h1,
+                        "height2": h2,
+                        "energy1": E1,
+                        "energy2": E2,
+                        "derivative": derivative,
+                    }
+                )
+
+    if not derivatives:
+        if return_all:
+            return None, {
+                "average_derivative": None,
+                "all_derivatives": [],
+                "pairs": [],
+                "num_pairs": 0,
+            }
+        return None
+
+    average_derivative = np.mean(derivatives)
+
+    if return_all:
+        info = {
+            "average_derivative": average_derivative,
+            "all_derivatives": derivatives,
+            "pairs": pairs_info,
+            "num_pairs": len(derivatives),
+        }
+        return average_derivative, info
+
+    return average_derivative
+
+
+def plot_valid_pairs(
+    valid_pairs,
+    heights,
+    energies,
+    E0,
+    window_width,
+    save_path=None,
+    show=False,
+):
+    """
+    Plot all band data in gray, and plot each valid pair as a red dashed line.
+    The y-axis view is restricted by set_ylim to [E0 - window_width/2, E0 + window_width/2].
+
+    Parameters:
+    -----------
+    valid_pairs : list of dict
+        Each dict should contain:
+        - band_index
+        - height1, height2
+        - energy1, energy2
+    heights : array-like
+        Height values
+    energies : array-like
+        Energy values, shape = (n_points, n_bands) or (n_points,)
+    E0 : float
+        Target energy level
+    window_width : float
+        Energy window width around E0
+    save_path : str or Path, optional
+        If given, save the figure to this path
+    show : bool, default=False
+        If True, display the figure
+    """
+    heights = np.array(heights, dtype=float)
+    energies = np.array(energies, dtype=float)
+
+    if energies.ndim == 1:
+        energies = energies[:, None]
+
+    e_low = E0 - window_width / 2.0
+    e_high = E0 + window_width / 2.0
+
+    fig, ax = plt.subplots(figsize=(8, 6))
+
+    # Plot all data in gray
+    for ib in range(energies.shape[1]):
+        ax.plot(
+            heights,
+            energies[:, ib],
+            linestyle="-",
+            color="0.6",
+            linewidth=1.0,
+            alpha=0.85,
+        )
+    
+    # define a list of colors that does not contain any white, black, gray
+    # white black and gray are bad colors here because they will be overshaded by the gray lines plotted above
+    NON_GRAY_COLORS = [
+    'red', 'blue', 'green', 'orange', 'purple', 'brown',
+    'pink', 'cyan', 'magenta', 'lime', 'teal', 'olive',
+    'navy', 'crimson', 'gold', 'indigo', 'coral', 'orchid'
+    ]
+    # Plot valid pairs with colors in the list
+    for ivp, pair in enumerate(valid_pairs):
+        cur_color = NON_GRAY_COLORS[ivp % len(NON_GRAY_COLORS)]
+        ax.plot(
+            [pair["height1"], pair["height2"]],
+            [pair["energy1"], pair["energy2"]],
+            linestyle="-",
+            color=cur_color,
+            linewidth=1.0,
+            marker="o",
+            markersize=1,
+            alpha=0.95,
+            )
+
+    ax.axhline(E0, color="black", linestyle=":", linewidth=1.0, alpha=0.8)
+    ax.set_xlabel("Height")
+    ax.set_ylabel("Energy")
+    ax.set_title(f"Valid pairs around E0 = {E0:.3f}")
+    ax.set_ylim(e_low, e_high)
+    ax.grid(True, alpha=0.25)
+
+    if save_path is not None:
+        save_path = Path(save_path)
+        save_path.parent.mkdir(parents=True, exist_ok=True)
+        fig.savefig(save_path, dpi=300, bbox_inches="tight")
+
+    if show:
+        plt.show()
+    else:
+        plt.close(fig)
+
+
+if __name__ == "__main__":
+    # The folder where the data file exists. 
+    # the data files are in this format: kpath_info_for_kpoint_index_0.txt, kpath_info_for_kpoint_index_1.txt, ...
+    # Each data file should have its first column to be the stabilization parameter, i.e. height of slab
+    # The rest columns are eigenvalues for the first band, second band, ...
+    txt_folder = "GK"
+    
+    # file pattern that will be searched in txt_folder
+    txt_files = "kpath_info*.txt"
+
+    # we set a minimal derivative because those derivatives smaller than threshold result unphysical coupling contribution
+    # because each derivative will be placed in the denominator
+    derivative_threshold = 0.000001
+
+    # the energy window that will display the crossings at target energy
+    window_width = 1
+
+    # the target energy values of interest
+    # at each target energy, the crossing will be found and the derivatve will be calculated
+    E0_values = np.arange(0, 30, 0.1)
+
+    # energy threshold as the maximal energy difference for each found adjacent energy-height points that crosses the target energy line
+    energy_threshold = 10000
+
+
+    plot_dir = Path(txt_folder) / "valid_pair_plots"
+    plot_dir.mkdir(parents=True, exist_ok=True)
+
+    for f in Path(txt_folder).glob(txt_files):
+
+        # process the file name to get kpoint index
+        ind_str = Path(f).stem.split("_")[-1]
+
+        print(f"Processing file {f}")
+
+        # Load bands data
+        bands_data = np.loadtxt(f)
+        if bands_data.ndim == 1:
+            raise ValueError(f"File {f} is only one dimensional!")
+
+        heights = bands_data[:, 0]
+        energies = bands_data[:, 1:]
+
+        couplings = np.zeros_like(E0_values, dtype=float)
+
+        # Outer loop: each E0
+        for ie, E0 in enumerate(E0_values):
+            all_valid_pairs_for_this_E0 = []
+
+            # Inner loop: each band index ib
+            for ib in range(energies.shape[1]):
+                avg_deriv, info = average_derivative_at_energy(
+                    heights,
+                    energies[:, ib],
+                    E0,
+                    threshold=energy_threshold,
+                    return_all=True,
+                )
+
+                # Collect valid pairs for plotting
+                for pair in info["pairs"]:
+                    all_valid_pairs_for_this_E0.append(
+                        {
+                            "band_index": ib,
+                            "height1": pair["height1"],
+                            "height2": pair["height2"],
+                            "energy1": pair["energy1"],
+                            "energy2": pair["energy2"],
+                            "derivative": pair["derivative"],
+                        }
+                    )
+
+                # Accumulate coupling
+                if avg_deriv is not None:
+                    # if average derivative for current ib is larger than threshold, we consider it physical enough
+                    # and add the inverse of it to coupling contribution
+                    if avg_deriv > derivative_threshold:
+                        couplings[ie] += 1.0 / avg_deriv
+
+                    # here we add the inverse of derivative threshold, which is confusing!!!!
+                    else:
+                        #couplings[ie] += 1.0 / derivative_threshold
+                        couplings[ie] += 0
+
+
+            # Plot all valid paris for this E0 after all ib are done for this E0
+            if len(all_valid_pairs_for_this_E0) > 0:
+                save_path = plot_dir / f"valid_pairs_{ind_str}_E0_{E0:.3f}.png"
+                plot_valid_pairs(
+                    valid_pairs=all_valid_pairs_for_this_E0,
+                    heights=heights,
+                    energies=energies,
+                    E0=E0,
+                    window_width=window_width,
+                    save_path=save_path,
+                    show=False,
+                )
+
+
+        # All the energy values done. Now we save coupling data
+        # shape (N,2), where N is number of target energy values
+        final_coupling_data = np.column_stack((E0_values, couplings))
+        np.savetxt(
+            f"{txt_folder}/coupling_for_kpoint_index_{ind_str}.txt",
+            final_coupling_data,
+            header="E_values couplings",
+        )
