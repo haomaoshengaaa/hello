@@ -1,0 +1,21 @@
+
+If you want to find the maximal cpu cores allowed to use for QOS=p70623_1028, execute command below
+
+sacctmgr show qos p70623_1028 format=Name,GrpTRES,MaxTRESPerJob,MaxWall,GrpJobs,Preempt
+
+you will see output like this:
+      Name       GrpTRES       MaxTRES     MaxWall GrpJobs    Preempt 
+---------- ------------- ------------- ----------- ------- ---------- 
+p70623_10+      cpu=1280               10-00:00:00                    
+
+
+GrpTRES means there are 1280 cpu cores at most allowed to be used(including those already occupied) for 
+this QOS for all users in current group.
+
+
+You could also list all the jobs running under this QOS=p70623_1028 to get more information:
+squeue -q p70623_1028 -t RUNNING -o "%.18i %.9u %.6C %.5D %R"
+
+You could also list all the jobs pending under this QOS=p70623_1028 to get more information:
+squeue -q p70623_1028 -t PENDING -o "%.18i %.9u %.6C %.5D %R"
+
