@@ -1,5 +1,27 @@
+For zen3_0512, there are 128 cpu cores and 256 logical cores
+For zen3_1024, there are 128 cpu cores and 256 logical cores
+However, the default ntasks-per-node of slurm on VSC5 is 128, which means you are only allowed 
+to use 128 logical cores on each node, but you have to be aware that, when a job is running on these 128 logical cores
+you are actually taking up all the 256 logical cores and all the 500 GB memory space.
 
-If you want to find the maximal cpu cores allowed to use for QOS=p70623_1028, execute command below
+
+Note that the number you use in mpirun refers to number of logical cores
+for example
+mpirun -np 128 vasp_std 
+this command means you are using 128 logical cores
+
+
+For VSC5, even though you specify ntasks-per-node = 16 in bash script, you are still using the memory of the entire node
+say, you request one zen3_0512 node, which provides the user 500 GB memory 
+and 128 logical cores(only 128 logical cores are allowed to use at most on each node, as I mentioned above)
+since you specify ntasks-per-node = 16, that means you are 
+requesting 16 logical cores from each node and 500 GB memory from each node
+but, let me say this again, when a job is running on these 16 logical cores on each node, you are 
+actually taking up all the 256 logical cores (yes, you have 240 logical cores keeping idle) and 500 GB memory on each node
+
+
+
+If you want to find the maximal logical cores allowed to request for QOS=p70623_1028, execute command below
 
 sacctmgr show qos p70623_1028 format=Name,GrpTRES,MaxTRESPerJob,MaxWall,GrpJobs,Preempt
 
@@ -8,9 +30,10 @@ you will see output like this:
 ---------- ------------- ------------- ----------- ------- ---------- 
 p70623_10+      cpu=1280               10-00:00:00                    
 
-
-GrpTRES means there are 1280 cpu cores at most allowed to be used(including those already occupied) for 
+GrpTRES means there are 1280 logical cores (5 nodes) at most allowed to be requested(including those already occupied) for 
 this QOS for all users in current group.
+
+
 
 
 You could also list all the jobs running under this QOS=p70623_1028 to get more information:
