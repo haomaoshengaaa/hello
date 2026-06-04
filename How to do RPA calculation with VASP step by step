@@ -1,3 +1,29 @@
+Before everything starts, you need to know something about parallelization and speed about RPA and RPAR
+
+Below are some test calculations I already did, most of them failed because of memory issue or speed issue
+
+-------------------------- H2 + Li surface ------------------
+190 Li atoms and two H atoms
+ENCUT = 300
+ALGO = RPA
+NBANDS = 55840
+NOMEGA = 20
+we are using 160 cores on 8 nodes, 20 cores per node sharing 500 GB memory, so we have 25 GB per core
+
+from OUTCAR, we could know for such a calculation the memory requirement is 17 GB per core
+so there is no memory issue, however the speed is too low
+14 hours can not even finish the calculation for the first frequency point
+
+
+If we now switch from RPA to RPAR, what will happen?
+
+
+
+
+##############################################################################
+Now the real tutorial starts
+##############################################################################
+
 1. 
 you need a standard scf run to get the converged WAVECAR.
 setup POTCAR KPOINTS POSCAR accordingly
