@@ -21,7 +21,8 @@ So the memory requirement per core for RPAR even increased compared to RPA! Weir
 The reason is that we are actually having a misconception about RPAR. 
 Remember, RPAR algorithm does not gurantee a lower memory requirement for each mpirank compared to RPA. 
 Actually，most of the time it increases the memory requirement per mpirank when other settings are the same, as what we see now.
-The advantange of RPAR is that it scales as Nω​ * Nk * ​NG**3， whereas RPA scales as Nω ​* Nk**2 * ​NG**4
+The advantange of RPAR is that it scales as Nω​ * Nk * ​NG**3， whereas RPA scales as Nω ​* Nk**2 * ​NG**4. So RPAR only speeds up
+the calculation compared to RPA, instead of reducing the runtime memory requirement.
 
 
 
