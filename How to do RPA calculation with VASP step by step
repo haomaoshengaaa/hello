@@ -64,4 +64,5 @@ ALGO = ACFDT # or RPA or RPAR
 NOMEGA = 12     #  For large gap insulators NOMEGA = 8 will suffice, while for semiconductors 10-12 suffices. For metals, you might need 16 or even more.
 LWAVE = F   # wavefunction from RPAR or RPA calculation is useless
 LCHARG = F  # we dont need charge density from RPA or RPAR calculation as well
+NCORE = 1 # FOR RPA and RPAR calculations, VASP only accepts NCORE=1, otherwise it will report an error
 
