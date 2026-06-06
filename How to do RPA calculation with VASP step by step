@@ -14,9 +14,9 @@ from OUTCAR, we could know for such a calculation the memory requirement is 17 G
 so there is no memory issue, however the speed is too low
 14 hours can not even finish the calculation for the first frequency point
 
-
-If we now switch from RPA to RPAR, what will happen?
-
+If we now switch ALGO from RPA to RPAR, what will happen?
+According to the VASP output, each mpirank out of these 20 mpiranks will require 39 GB,
+So the memory requirement per core for RPAR even increased compared to RPA! Weird,right?
 
 
 
