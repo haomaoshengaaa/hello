@@ -16,7 +16,7 @@ so there is no memory issue, however the speed is too low
 14 hours can not even finish the calculation for the first frequency point
 
 If we now switch ALGO from RPA to RPAR, what will happen?
-According to the VASP output, each mpirank out of these 20 mpiranks will require 39 GB,
+According to the VASP output, each mpirank out of these 160 mpiranks will require 39 GB,
 So the memory requirement per core for RPAR even increased compared to RPA! Weird,right?
 The reason is that we are actually having a misconception about RPAR. 
 Remember, RPAR algorithm does not gurantee a lower memory requirement for each mpirank compared to RPA. 
@@ -24,17 +24,10 @@ Actually，most of the time it increases the memory requirement per mpirank when
 The advantange of RPAR is that it scales as Nω​ * Nk * ​NG**3， whereas RPA scales as Nω ​* Nk**2 * ​NG**4. So RPAR only speeds up
 the calculation compared to RPA, instead of reducing the runtime memory requirement.
 
+To solve the memory problem of this RPAR calculation, we need to calculate the total required memory, 
+which is 39 GB * 160 = 6240. So the bash script need to request computational resources 
+so that the total memory across all nodes is at least greater than this value.
 
-
-Ok, now let us redo the RPAR calculation, but with different cpu arrangement this time.
-On vsc5, 4 zen3_1024 nodes are used with 128 cores on each node being used in calculation. So we have 8 GB at most per mpirank.
-However, we know that some space should be left for VASP initialization and so on, so actual size of free memory per core should be roughly
-7 GB.
-
-From OUTCAR in this new RPAR calculation, we know that the required memory per mpirank should be 15 GB. So apparently this calculation
-failed. But this prompts us to reduce the number of cores used on each node to increase the memory per core (since the memory for each node is fixed).
-
-Let us redo this RPAR calculation but with 64 cores on each 
 
 
 ##############################################################################
