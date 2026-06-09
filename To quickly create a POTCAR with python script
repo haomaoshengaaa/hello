@@ -1,0 +1,108 @@
+#!/usr/bin/env python3
+"""
+concatenate_potcars.py
+
+Concatenate several POTCAR files in the order given on the command line.
+The root folder for POTCAR libraries is hard-coded in the script.
+
+Usage:
+    python concatenate_potcars.py --show
+    python concatenate_potcars.py <element1> [element2 ...]
+"""
+
+import os
+import sys
+import argparse
+
+# ============================================================
+# HARD-CODE THE ROOT FOLDER WHERE POTCAR SUBFOLDERS ARE STORED
+# Example: /home/user/potcars or /opt/vasp/potpaw_PBE
+POTCAR_ROOT = "/path/to/your/potcar/root"   # <-- CHANGE THIS
+# ============================================================
+
+def show_available_elements():
+    """List all subdirectories in POTCAR_ROOT that contain a POTCAR file."""
+    if not os.path.isdir(POTCAR_ROOT):
+        print(f"Error: POTCAR root directory '{POTCAR_ROOT}' does not exist.")
+        sys.exit(1)
+
+    elements = []
+    for item in os.listdir(POTCAR_ROOT):
+        item_path = os.path.join(POTCAR_ROOT, item)
+        if os.path.isdir(item_path):
+            potcar_path = os.path.join(item_path, "POTCAR")
+            if os.path.isfile(potcar_path):
+                elements.append(item)
+            else:
+                # Optionally warn about folders missing POTCAR
+                print(f"Warning: '{item}' folder exists but no POTCAR file found.", file=sys.stderr)
+
+    if not elements:
+        print("No valid POTCAR folders found in:", POTCAR_ROOT)
+        sys.exit(1)
+
+    print("Available elements (folders containing a POTCAR file):")
+    for elem in sorted(elements):
+        print(f"  {elem}")
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="Concatenate POTCAR files in specified order."
+    )
+    parser.add_argument(
+        "elements",
+        nargs="*",
+        help="Element names (e.g., Ga Ag_GW) in the order they should be concatenated."
+    )
+    parser.add_argument(
+        "--show",
+        action="store_true",
+        help="List all available element folders in the POTCAR root and exit."
+    )
+
+    args = parser.parse_args()
+
+    # If --show is given, list elements and exit
+    if args.show:
+        show_available_elements()
+        sys.exit(0)
+
+    # Otherwise, need at least one element
+    if not args.elements:
+        parser.print_usage()
+        print("Error: Please specify at least one element, or use --show to list available ones.")
+        sys.exit(1)
+
+    potcar_paths = []
+
+    # Build paths and check existence
+    for elem in args.elements:
+        path = os.path.join(POTCAR_ROOT, elem, "POTCAR")
+        if not os.path.isfile(path):
+            print(f"Error: POTCAR not found for '{elem}' at '{path}'")
+            sys.exit(1)
+        potcar_paths.append(path)
+
+    # Output file in the current working directory
+    output_file = "POTCAR"
+
+    # Check if POTCAR already exists in current directory
+    if os.path.exists(output_file):
+        print(f"Error: '{output_file}' already exists in the current directory.")
+        print("Please remove or rename it before running this script.")
+        sys.exit(1)
+
+    try:
+        with open(output_file, "wb") as out_f:
+            for path in potcar_paths:
+                with open(path, "rb") as in_f:
+                    out_f.write(in_f.read())
+        print(f"Successfully created '{output_file}' from:")
+        for path in potcar_paths:
+            print(f"  {path}")
+    except Exception as e:
+        print(f"Error while writing concatenated file: {e}")
+        sys.exit(1)
+
+if __name__ == "__main__":
+    main()
