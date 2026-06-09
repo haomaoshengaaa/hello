@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """
-concatenate_potcars.py
+establish_potcar
 
 Concatenate several POTCAR files in the order given on the command line.
 The root folder for POTCAR libraries is hard-coded in the script.
 
 Usage:
-    python concatenate_potcars.py --show
-    python concatenate_potcars.py <element1> [element2 ...]
+    establish_potcar --show
+    establish_potcar <element1> [element2 ...]
 """
 
 import os
