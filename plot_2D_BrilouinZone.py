@@ -186,3 +186,29 @@ def plot_2d_brillouin_zone(a1,
               loc='upper right', fontsize='small')
     plt.show()
     return fig, ax
+
+
+if __name__ == "__main__":
+
+    #####################################################################################################################
+    # the code here only filter out kpoints with kz=0 from all the kpoints listed in EIGENVAL and plot it in BZ
+    # the BZ is calculated based on the lattice vectors from POSCAR. If you want to plot kpoints in any other BZ
+    # feel free to modify the code below
+    #######################################################################################################################
+    from ase.io import read
+    from pymatgen.io.vasp.outputs import Eigenval
+
+    # 1. Read POSCAR with ASE to obtain lattice vectors (each row is a lattice vector a1, a2, a3)
+    cell = np.array(read("POSCAR").cell)
+    a1, a2 = cell[0], cell[1]
+    # The z components of the two in-plane lattice vectors should be nearly 0, confirming the plane is the xy plane
+    assert abs(a1[2]) < 1e-6 and abs(a2[2]) < 1e-6, \
+        "z components of a1/a2 are not zero; the plane is not the xy plane; cannot directly take 2D components"
+
+    # 2. Read EIGENVAL to get all k-points (fractional/reciprocal space coordinates)
+    all_kpts = np.array(Eigenval("EIGENVAL").kpoints)          # shape (nkpt, 3)
+    kxy = all_kpts[np.abs(all_kpts[:, 2]) < 1e-6][:, :2]       # keep only kz~0, collect [kx, ky]
+
+    # 3. Call existing function to plot these k-points into the 2D Brillouin zone
+    plot_2d_brillouin_zone(a1[:2], a2[:2], user_points_reciprocal=kxy, label_user_points=False)
+
