@@ -1,0 +1,38 @@
+METAGGA as an example， for a bulk (2d materials might be different!)
+
+1. get the optimized geometry
+
+2. create a folder for band structure calculation, prepare POSCAR(optimized geometry), POTCAR, INCAR(this should be INCAR for scf calculation)
+
+3.execute vaspkit 303, you will get these files:
+
+    PRIMCELL.vasp : the actual POSCAR that you should use in the following calculations, which is 
+                  actually a geometry that you got after linear transformation to initial POSCAR, called standardized primtive cell
+
+    HIGH_SYMMETRY_POINTS: high-symmetry points for standardized primitive cell
+
+    KPATH.IN : the line-mode KPOINTS file for a standard band structure calculation for standardized primtive cell, constructed based on 
+               information from HIGH_SYMMETRY_POINTS
+
+
+3. cp PRIMCELL.vasp POSCAR, and check if the order of elements in POTCAR agrees with order in current POSCAR
+
+4. execute vaspkit 251, you will enter interactive mode that requires you to input the parametes for band structure calculation, for example
+    Monkhorst-Pack or Gamma Scheme, Kmesh-Resolution Value for SCF Calculation, Kmesh-Resolution Value along K-Path for Band Calculation
+
+   You should read the summary part at the end of vaspkit report. If you are not satisfied with the resolution in generated files, you should
+   execute vaspkit 251 again.
+
+   The new KPOINTS file will be written, which has the format like this:
+    --> header line
+    --> number of all kpoints listed in KPOINTS file
+    --> a string "Reciprocal lattice"
+    --> several lines. each line is the direct coordinate for a kpoint in scf calculation with its weight
+    --> several lines. each line is the direct coordinate for a kpoint in band structure calculation(i.e. kpoints along suggested k-path), with weight 0.
+
+5. now we already finished the calculation with new KPOINTS and standardized primtive cell. To get band structure data, we need to execute vaspkit 252
+   three new files will be generated:   
+      BAND.dat  BAND-REFORMATTED.dat  KLABELS
+
+6. write python code to load BAND-REFORMATTED.dat and plot band structure
+
