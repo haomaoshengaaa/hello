@@ -30,6 +30,8 @@ METAGGA as an example， for a bulk (2d materials might be different!)
     --> several lines. each line is the direct coordinate for a kpoint in scf calculation with its weight
     --> several lines. each line is the direct coordinate for a kpoint in band structure calculation(i.e. kpoints along suggested k-path), with weight 0.
 
+   now we could execute mpirun -np $number_of_cores vasp_std
+
 5. now we already finished the calculation with new KPOINTS and standardized primtive cell. To get band structure data, we need to execute vaspkit 252
    three new files will be generated:   
       BAND.dat  BAND-REFORMATTED.dat  KLABELS
