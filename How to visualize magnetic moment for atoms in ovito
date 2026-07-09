@@ -24,7 +24,7 @@ def read_last_site_magmoms_from_outcar(outcar_path, natoms):
     """
     outcar_path = Path(outcar_path)
     if not outcar_path.is_file():
-        return None
+        raise FileNotFoundError(f"OUTCAR not found: {outcar_path}")
 
     with outcar_path.open("r", encoding="utf-8", errors="ignore") as f:
         lines = f.readlines()
