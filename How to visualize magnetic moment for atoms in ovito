@@ -36,7 +36,7 @@ def read_last_site_magmoms_from_outcar(outcar_path, natoms):
             last_idx = i
 
     if last_idx < 0:
-        return None
+        raise RuntimeError(f"No 'magnetization (x)' block found in {outcar_path}")
 
     # Parse lines after the block header.
     # Typical OUTCAR layout:
