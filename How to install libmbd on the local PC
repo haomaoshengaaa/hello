@@ -3,3 +3,10 @@ https://github.com/libmbd/libmbd
 follow the instructions in this page, but remember to use sudo privilege, because
 the installation code(make -C build install) will try to copy the library to /usr/local/lib, 
 which is a folder needs sudo to have access.
+
+
+
+If you already installed libmbd and modified part of the source code and want to compile the code again.
+just do this (usually I install libmbd without SCALAPACK_MPI so just ignore the text in bracket)
+cmake -B build [-DENABLE_SCALAPACK_MPI=ON]
+sudo make -C build install
