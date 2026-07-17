@@ -79,3 +79,7 @@ NBMOD=-3
 EINT = 0 26
 KPUSE = 1 
 
+
+第四步：分析数据
+VASP生成的PARCHG并不能直接拖到VESTA中可视化，所以你需要写一个脚本把所有PARCHG文件都加上.vasp后缀（在我的LOCAL PC上我已经有一个自定义命令add_parchg_suffix可以做这件事）
+
